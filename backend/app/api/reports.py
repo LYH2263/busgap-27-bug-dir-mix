@@ -16,7 +16,8 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 
 def _trip_maps(trips: list[Trip], line_direction: str | None) -> tuple[dict[int, str], dict[int, str]]:
     trip_no_map = {t.id: t.trip_no for t in trips}
-    trip_dir_map = {t.id: normalize_direction(line_direction or t.direction) for t in trips}
+    # 班次自身方向优先；未标才跟随线路，再缺省按上行兼容
+    trip_dir_map = {t.id: normalize_direction(t.direction or line_direction) for t in trips}
     return trip_no_map, trip_dir_map
 
 
@@ -67,11 +68,14 @@ def timeline(line_id: int, stop_name: str = "市民中心", direction: Literal["
     arrivals = sorted(db.scalars(select(Arrival).where(Arrival.trip_id.in_(trip_ids),
                                                        Arrival.stop_name == stop_name)).all(),
                       key=lambda a: a.actual_arrive)
-    _ = direction
     if not arrivals:
         return {"stop_name": stop_name, "direction": direction, "marks": []}
+    # 位置锚点取该站全部到站，切换方向时点的相对位置不漂移
     t0 = arrivals[0].actual_arrive
     span = max((arrivals[-1].actual_arrive - t0).total_seconds(), 1)
+    # 与检测同一套参与班次：按方向过滤时只保留该方向班次的到站
+    if direction is not None:
+        arrivals = [a for a in arrivals if trip_dir_map[a.trip_id] == direction]
     marks = [{"trip_no": trip_no_map[a.trip_id], "direction": trip_dir_map[a.trip_id],
               "actual_arrive": a.actual_arrive.isoformat(),
               "pct": round((a.actual_arrive - t0).total_seconds() / span * 100, 2)} for a in arrivals]

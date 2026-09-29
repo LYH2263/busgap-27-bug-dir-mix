@@ -31,18 +31,19 @@ def classify_gap(gap_min: float, planned_headway_min: float, bunch_threshold: fl
     return ("normal", f"间隔接近计划 {planned_headway_min:.1f} 分钟，保持即可。")
 
 def detect_bunching(arrivals: list[dict], planned_headway_min: float, bunch_threshold: float, large_threshold: float) -> list[GapEvent]:
-    by_stop: dict[str, list[dict]] = {}
+    # 同一站只让同方向相邻班次比间隔；未标方向的老班次按上行兼容
+    groups: dict[tuple[str, str], list[dict]] = {}
     for a in arrivals:
-        by_stop.setdefault(a["stop_name"], []).append(a)
+        direction = normalize_direction(a.get("direction"))
+        groups.setdefault((a["stop_name"], direction), []).append(a)
     events: list[GapEvent] = []
-    for stop, items in by_stop.items():
+    for (stop, direction), items in groups.items():
         items = sorted(items, key=lambda x: x["actual_arrive"])
         for i in range(1, len(items)):
             prev, cur = items[i - 1], items[i]
             gap_min = (cur["actual_arrive"] - prev["actual_arrive"]).total_seconds() / 60.0
             status, suggestion = classify_gap(gap_min, planned_headway_min, bunch_threshold, large_threshold)
-            stamp = cur.get("direction") or prev.get("direction") or DEFAULT_DIRECTION
-            events.append(GapEvent(stop, prev["trip_no"], cur["trip_no"], stamp,
+            events.append(GapEvent(stop, prev["trip_no"], cur["trip_no"], direction,
                                    round(gap_min, 2), planned_headway_min, status, suggestion))
     return events
 

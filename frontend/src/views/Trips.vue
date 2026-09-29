@@ -25,7 +25,6 @@ function label(s: string) {
 <template>
   <h1>班次 · 间隔条带</h1>
   <p class="sub">左侧班次清单（可改方向），右侧串车/间隔竖直条带</p>
-  <p class="muted">业务页与检测读口未强制同参与集</p>
   <div class="bg-split">
     <aside class="bg-trip-col">
       <h2>班次列表</h2>
