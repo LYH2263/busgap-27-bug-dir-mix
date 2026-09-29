@@ -6,7 +6,8 @@ import { DIRECTION_OPTIONS, directionLabel } from '../direction'
 const data = ref<{ stop_name: string; marks: any[] }>({ stop_name: '', marks: [] })
 const direction = ref('')
 async function load() {
-  data.value = await api('/reports/timeline?line_id=1')
+  const q = direction.value ? `&direction=${direction.value}` : ''
+  data.value = await api(`/reports/timeline?line_id=1${q}`)
 }
 onMounted(load)
 function markColor(m: any) {

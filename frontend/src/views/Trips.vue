@@ -14,6 +14,10 @@ async function changeDirection(t: any, e: Event) {
   const direction = (e.target as HTMLSelectElement).value
   const updated = await api(`/trips/${t.id}`, { method: 'PATCH', body: JSON.stringify({ direction }) })
   Object.assign(t, updated)
+  // 改完方向立即按新参与集重检，避免条带还显示旧方向的结果
+  try {
+    events.value = (await api('/reports/run?line_id=1', { method: 'POST' })).events || []
+  } catch { events.value = [] }
 }
 function stripClass(s: string) {
   return s === 'bunching' ? 'bg-bunch' : s === 'large_gap' ? 'bg-large' : ''

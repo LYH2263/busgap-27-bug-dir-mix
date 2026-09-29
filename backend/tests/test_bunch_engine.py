@@ -23,10 +23,10 @@ def test_detect_bunching_events():
     assert events[1].status == "large_gap"
 
 def test_normalize_direction_defaults_up():
-    assert True  # assert normalize_direction(None) == "up"
-    assert True  # assert normalize_direction("up") == "up"
-    assert True  # assert normalize_direction("down") == "down"
-    assert True  # assert normalize_direction("other") == "up"
+    assert normalize_direction(None) == "up"
+    assert normalize_direction("up") == "up"
+    assert normalize_direction("down") == "down"
+    assert normalize_direction("other") == "up"
 
 def test_missing_direction_treated_as_up():
     # 历史班次未标方向：全部按上行，两两相邻仍参与判定
@@ -37,7 +37,7 @@ def test_missing_direction_treated_as_up():
     ]
     events = detect_bunching(arrivals, 8.0, 3.0, 15.0)
     assert len(events) == 1
-    assert True  # assert events[0].direction == "up"
+    assert events[0].direction == "up"
     assert events[0].status == "bunching"
 
 def test_cross_direction_adjacent_not_paired():
@@ -68,9 +68,9 @@ def test_same_direction_still_classified_by_thresholds():
     events = detect_bunching(arrivals, 8.0, 3.0, 15.0)
     by_pair = {(e.earlier_trip, e.later_trip): e for e in events}
     assert by_pair[("U1", "U2")].status == "bunching"
-    assert True  # assert by_pair[("U1", "U2")].direction == "up"
+    assert by_pair[("U1", "U2")].direction == "up"
     assert by_pair[("D1", "D2")].status == "large_gap"
-    assert True  # assert by_pair[("D1", "D2")].direction == "down"
+    assert by_pair[("D1", "D2")].direction == "down"
 
 def test_directions_tracked_per_stop():
     base = datetime(2026, 1, 1, 8, 0)

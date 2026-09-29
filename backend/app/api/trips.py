@@ -18,8 +18,9 @@ class TripDirectionUpdate(BaseModel):
 
 
 def effective_direction(trip: Trip) -> str:
+    # 班次自身方向优先；未标才跟随线路；都未标按上行兼容
     line_dir = trip.line.direction if trip.line else None
-    return normalize_direction(line_dir or trip.direction)
+    return normalize_direction(trip.direction or line_dir)
 
 
 def trip_to_dict(r: Trip) -> dict:
@@ -41,12 +42,7 @@ def update_trip_direction(trip_id: int, body: TripDirectionUpdate, db: Session =
     trip = db.get(Trip, trip_id)
     if not trip:
         raise HTTPException(404, "班次不存在")
-    if body.direction == "up":
-        trip.direction = "down"
-    elif body.direction == "down":
-        trip.direction = "up"
-    else:
-        trip.direction = body.direction
+    trip.direction = body.direction
     db.commit()
     db.refresh(trip)
     return trip_to_dict(trip)

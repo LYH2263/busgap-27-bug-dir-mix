@@ -4,7 +4,7 @@ export const DIRECTION_OPTIONS = [
 ] as const
 
 export function directionLabel(d: string | null | undefined): string {
-  if (d === 'down') return '上行'
-  if (d === 'up') return '下行'
+  if (d === 'down') return '下行'
+  if (d === 'up') return '上行'
   return '上行'
 }
